@@ -23,16 +23,22 @@ func setupGlog(flags *pflag.FlagSet) {
 	flag.CommandLine.Set("logtostderr", "true")
 }
 
+func configurePlugins() []plugins.Plugin {
+	return []plugins.Plugin{
+		&plugins.Network{Interfaces: []string{"wlp3s0", "enp0s25", "tun0"}},
+		&plugins.Battery{},
+		&plugins.SimpleDate{},
+		&plugins.Bspwm{},
+	}
+}
+
 func main() {
 	dzenCmd := &cobra.Command{
 		Use:  "go-dzen",
 		Long: "Run dzen2",
 		Run: func(cmd *cobra.Command, args []string) {
 			d := dzen.NewCommand()
-			d.Plugins = append(d.Plugins, &plugins.SimpleDate{})
-			d.Plugins = append(d.Plugins, &plugins.Network{
-				Interfaces: []string{"wlp3s0"},
-			})
+			d.Plugins = configurePlugins()
 			d.Run()
 		},
 	}
