@@ -22,13 +22,11 @@ type Battery struct{}
 
 func (n Battery) String() string { return "battery" }
 
-func (n *Battery) Stream() chan string {
-	out := make(chan string)
+func (n *Battery) Send(out chan UpdateMessage) {
 	util.RunEvery(time.Duration(1*time.Second), func() error {
-		out <- n.prettyValue()
+		out <- UpdateMessage{n, n.prettyValue()}
 		return nil
 	})
-	return out
 }
 
 func (n *Battery) IsUsed() bool {

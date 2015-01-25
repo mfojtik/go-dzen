@@ -3,7 +3,6 @@ package plugins
 import (
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/golang/glog"
 )
@@ -39,24 +38,13 @@ func subscribeUpdates() chan string {
 	return writer.Output
 }
 
-func (b *Bspwm) Stream() chan string {
-	out := make(chan string, 1)
+func (b *Bspwm) Send(out chan UpdateMessage) {
 	updates := subscribeUpdates()
 	go func() {
-		lastStatus := ""
 		for {
-			select {
-			case update := <-updates:
-				lastStatus = parseStatus(update)
-				out <- lastStatus
-				glog.Infof("[bspwm] received %s", update)
-			default:
-				out <- lastStatus
-				time.Sleep(time.Duration(50 * time.Millisecond))
-			}
+			out <- UpdateMessage{b, parseStatus(<-updates)}
 		}
 	}()
-	return out
 }
 
 func parseStatus(s string) string {

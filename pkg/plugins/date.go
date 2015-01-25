@@ -15,13 +15,11 @@ func (n SimpleDate) String() string {
 	return "date"
 }
 
-func (p *SimpleDate) Stream() chan string {
-	out := make(chan string, 1)
+func (p *SimpleDate) Send(output chan UpdateMessage) {
 	timer := time.NewTicker(time.Duration(1 * time.Second))
 	go func() {
 		for now := range timer.C {
-			out <- icon(clockIcon) + now.Format(defaultFormat)
+			output <- UpdateMessage{Src: p, Message: icon(clockIcon) + now.Format(defaultFormat)}
 		}
 	}()
-	return out
 }

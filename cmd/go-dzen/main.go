@@ -3,10 +3,13 @@ package main
 import (
 	"flag"
 	"os"
+	"strconv"
+	"sync"
 
 	"github.com/golang/glog"
 	"github.com/mfojtik/go-dzen/pkg/dzen"
 	"github.com/mfojtik/go-dzen/pkg/plugins"
+	"github.com/mfojtik/go-dzen/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -25,10 +28,10 @@ func setupGlog(flags *pflag.FlagSet) {
 
 func configurePlugins() []plugins.Plugin {
 	return []plugins.Plugin{
+		&plugins.Bspwm{},
 		&plugins.Network{Interfaces: []string{"wlp3s0", "enp0s25", "tun0"}},
 		&plugins.Battery{},
 		&plugins.SimpleDate{},
-		&plugins.Bspwm{},
 	}
 }
 
@@ -37,9 +40,23 @@ func main() {
 		Use:  "go-dzen",
 		Long: "Run dzen2",
 		Run: func(cmd *cobra.Command, args []string) {
-			d := dzen.NewCommand()
-			d.Plugins = configurePlugins()
-			d.Run()
+			screenWidth, _ := strconv.Atoi(util.ScreenWidth())
+			// Configure left bar
+			leftBar := dzen.NewBar(0, screenWidth/2, "l")
+			leftBar.Add(&plugins.Bspwm{})
+
+			// Configure right bar
+			rightBar := dzen.NewBar(screenWidth/2, screenWidth, "r")
+			rightBar.Add(&plugins.Network{Interfaces: []string{"wlp3s0", "enp0s25", "tun0"}})
+			rightBar.Add(&plugins.Battery{})
+			rightBar.Add(&plugins.SimpleDate{})
+
+			// Start the bars asynchronously
+			var wg sync.WaitGroup
+			wg.Add(2)
+			go func() { leftBar.Start(); wg.Done() }()
+			go func() { rightBar.Start(); wg.Done() }()
+			wg.Wait()
 		},
 	}
 	setupGlog(dzenCmd.PersistentFlags())

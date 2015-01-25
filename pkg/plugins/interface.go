@@ -1,6 +1,11 @@
 package plugins
 
 type Plugin interface {
-	Stream() chan string
+	Send(chan UpdateMessage)
 	String() string
+}
+
+type UpdateMessage struct {
+	Src     Plugin
+	Message string
 }

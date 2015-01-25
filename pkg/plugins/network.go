@@ -33,18 +33,16 @@ type Interface struct {
 	Name string
 }
 
-func (n *Network) Stream() chan string {
-	out := make(chan string)
+func (n *Network) Send(out chan UpdateMessage) {
 	util.RunEvery(time.Duration(1*time.Second), func() error {
 		result := ""
 		for _, i := range n.Interfaces {
 			r := n.Interface(i)
 			result += r.String()
 		}
-		out <- result
+		out <- UpdateMessage{n, result}
 		return nil
 	})
-	return out
 }
 
 func (n *Network) Interface(name string) *Interface {
